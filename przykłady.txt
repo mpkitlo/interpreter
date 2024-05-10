@@ -1,0 +1,39 @@
+--- Przekazywanie parametrow do funckji poprzez referencje
+
+void inc(int x) {
+    x = x + 1;
+}
+
+void inc_ref(int &x) {
+    x = x + 1;
+}
+
+int main() {
+    int x = 1;
+    inc(x);     
+    print(x)    //  1
+    inc_ref(x); 
+    print(x)    //  2
+
+    return 0;
+}
+
+--- wiązanie statyczne / zagnieżdżanie funkcji
+
+void main(){ 
+    int x = 500;
+    
+    void glob() {
+        x = x + 1;
+        print(x); // 501
+    }
+    
+    void lok() {
+        int x = 10;
+        glob();
+        print(x); // 10
+    }
+
+    lok();
+    print(x);    // 501
+}
