@@ -1,8 +1,0 @@
-int chuj (int x, int y)
-{
-  int chuj2 (int z)
-  {
-    return 1;
-  }
-  chuj2 (3);
-}
