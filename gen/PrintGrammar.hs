@@ -166,7 +166,7 @@ instance Print [AbsGrammar.Arg' a] where
 
 instance Print (AbsGrammar.Block' a) where
   prt i = \case
-    AbsGrammar.Blk _ stmts -> prPrec i 0 (concatD [doc (showString "{"), prt 0 stmts, doc (showString "}")])
+    AbsGrammar.Blk _ decls stmts -> prPrec i 0 (concatD [doc (showString "{"), prt 0 decls, prt 0 stmts, doc (showString "}")])
 
 instance Print [AbsGrammar.Stmt' a] where
   prt _ [] = concatD []
@@ -176,13 +176,12 @@ instance Print (AbsGrammar.Stmt' a) where
   prt i = \case
     AbsGrammar.Empty _ -> prPrec i 0 (concatD [doc (showString ";")])
     AbsGrammar.BStmt _ block -> prPrec i 0 (concatD [prt 0 block])
-    AbsGrammar.DStmt _ decl -> prPrec i 0 (concatD [prt 0 decl])
     AbsGrammar.Ass _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr, doc (showString ";")])
     AbsGrammar.Ret _ expr -> prPrec i 0 (concatD [doc (showString "return"), prt 0 expr, doc (showString ";")])
     AbsGrammar.VRet _ -> prPrec i 0 (concatD [doc (showString "return"), doc (showString ";")])
-    AbsGrammar.Cond _ expr block -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block])
-    AbsGrammar.CondElse _ expr block1 block2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block1, doc (showString "else"), prt 0 block2])
-    AbsGrammar.While _ expr block -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block])
+    AbsGrammar.Cond _ expr stmt -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt])
+    AbsGrammar.CondElse _ expr stmt1 stmt2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt1, doc (showString "else"), prt 0 stmt2])
+    AbsGrammar.While _ expr stmt -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt])
     AbsGrammar.Break _ -> prPrec i 0 (concatD [doc (showString "break")])
     AbsGrammar.Continue _ -> prPrec i 0 (concatD [doc (showString "continue")])
     AbsGrammar.SExp _ expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])

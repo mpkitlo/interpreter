@@ -20,7 +20,7 @@ separator  Arg "," ;
 
 -- statements ----------------------------------------------
 
-Blk.       Block ::= "{" [Stmt] "}" ;
+Blk.       Block ::= "{" [Decl] [Stmt] "}" ;
 
 separator  Stmt "" ;
 
@@ -28,19 +28,17 @@ Empty.     Stmt ::= ";" ;
 
 BStmt.     Stmt ::= Block ;
 
-DStmt.     Stmt ::= Decl ; 
-
 Ass.       Stmt ::= Ident "=" Expr  ";" ;
 
 Ret.       Stmt ::= "return" Expr ";" ;
 
 VRet.      Stmt ::= "return" ";" ;
 
-Cond.      Stmt ::= "if" "(" Expr ")" Block ;
+Cond.      Stmt ::= "if" "(" Expr ")" Stmt ;
 
-CondElse.  Stmt ::= "if" "(" Expr ")" Block "else" Block ;
+CondElse.  Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt ;
 
-While.     Stmt ::= "while" "(" Expr ")" Block ;
+While.     Stmt ::= "while" "(" Expr ")" Stmt ;
 
 Break.     Stmt ::= "break" ;
 

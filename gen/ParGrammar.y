@@ -100,7 +100,7 @@ ListArg
 
 Block :: { (AbsGrammar.BNFC'Position, AbsGrammar.Block) }
 Block
-  : '{' ListStmt '}' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Blk (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $2)) }
+  : '{' ListDecl ListStmt '}' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Blk (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $2) (snd $3)) }
 
 ListStmt :: { (AbsGrammar.BNFC'Position, [AbsGrammar.Stmt]) }
 ListStmt
@@ -111,13 +111,12 @@ Stmt :: { (AbsGrammar.BNFC'Position, AbsGrammar.Stmt) }
 Stmt
   : ';' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Empty (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1))) }
   | Block { (fst $1, AbsGrammar.BStmt (fst $1) (snd $1)) }
-  | Decl { (fst $1, AbsGrammar.DStmt (fst $1) (snd $1)) }
   | Ident '=' Expr ';' { (fst $1, AbsGrammar.Ass (fst $1) (snd $1) (snd $3)) }
   | 'return' Expr ';' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Ret (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $2)) }
   | 'return' ';' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.VRet (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1))) }
-  | 'if' '(' Expr ')' Block { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Cond (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5)) }
-  | 'if' '(' Expr ')' Block 'else' Block { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.CondElse (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5) (snd $7)) }
-  | 'while' '(' Expr ')' Block { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.While (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5)) }
+  | 'if' '(' Expr ')' Stmt { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Cond (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5)) }
+  | 'if' '(' Expr ')' Stmt 'else' Stmt { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.CondElse (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5) (snd $7)) }
+  | 'while' '(' Expr ')' Stmt { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.While (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1)) (snd $3) (snd $5)) }
   | 'break' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Break (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1))) }
   | 'continue' { (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1), AbsGrammar.Continue (uncurry AbsGrammar.BNFC'Position (tokenLineCol $1))) }
   | Expr ';' { (fst $1, AbsGrammar.SExp (fst $1) (snd $1)) }

@@ -34,20 +34,19 @@ data Arg' a = ValArg a (Type' a) Ident | RefArg a (Type' a) Ident
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Block = Block' BNFC'Position
-data Block' a = Blk a [Stmt' a]
+data Block' a = Blk a [Decl' a] [Stmt' a]
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
 type Stmt = Stmt' BNFC'Position
 data Stmt' a
     = Empty a
     | BStmt a (Block' a)
-    | DStmt a (Decl' a)
     | Ass a Ident (Expr' a)
     | Ret a (Expr' a)
     | VRet a
-    | Cond a (Expr' a) (Block' a)
-    | CondElse a (Expr' a) (Block' a) (Block' a)
-    | While a (Expr' a) (Block' a)
+    | Cond a (Expr' a) (Stmt' a)
+    | CondElse a (Expr' a) (Stmt' a) (Stmt' a)
+    | While a (Expr' a) (Stmt' a)
     | Break a
     | Continue a
     | SExp a (Expr' a)
@@ -122,13 +121,12 @@ instance HasPosition Arg where
 
 instance HasPosition Block where
   hasPosition = \case
-    Blk p _ -> p
+    Blk p _ _ -> p
 
 instance HasPosition Stmt where
   hasPosition = \case
     Empty p -> p
     BStmt p _ -> p
-    DStmt p _ -> p
     Ass p _ _ -> p
     Ret p _ -> p
     VRet p -> p

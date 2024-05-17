@@ -36,19 +36,18 @@ transArg x = case x of
 
 transBlock :: Show a => AbsGrammar.Block' a -> Result
 transBlock x = case x of
-  AbsGrammar.Blk _ stmts -> failure x
+  AbsGrammar.Blk _ decls stmts -> failure x
 
 transStmt :: Show a => AbsGrammar.Stmt' a -> Result
 transStmt x = case x of
   AbsGrammar.Empty _ -> failure x
   AbsGrammar.BStmt _ block -> failure x
-  AbsGrammar.DStmt _ decl -> failure x
   AbsGrammar.Ass _ ident expr -> failure x
   AbsGrammar.Ret _ expr -> failure x
   AbsGrammar.VRet _ -> failure x
-  AbsGrammar.Cond _ expr block -> failure x
-  AbsGrammar.CondElse _ expr block1 block2 -> failure x
-  AbsGrammar.While _ expr block -> failure x
+  AbsGrammar.Cond _ expr stmt -> failure x
+  AbsGrammar.CondElse _ expr stmt1 stmt2 -> failure x
+  AbsGrammar.While _ expr stmt -> failure x
   AbsGrammar.Break _ -> failure x
   AbsGrammar.Continue _ -> failure x
   AbsGrammar.SExp _ expr -> failure x

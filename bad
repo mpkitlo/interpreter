@@ -1,0 +1,12 @@
+int x;
+
+int main() {
+    bool b = True;
+    bool b;
+    bool b;
+    bool b;
+    bool b;
+    bool b;
+    bool b;
+    return 0;
+}
