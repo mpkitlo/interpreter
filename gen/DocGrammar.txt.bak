@@ -30,7 +30,7 @@ except ``"`` unless preceded by ``\``.
 The set of reserved words is the set of terminals appearing in the grammar. Those reserved words that consist of non-letter characters are called symbols, and they are treated in a different way from those that are similar to identifiers. The lexer follows rules familiar from languages like Haskell, C, and Java, including longest match and spacing conventions.
 
 The reserved words used in grammar are the following:
-  | ``boolean`` | ``break`` | ``continue`` | ``else``
+  | ``bool`` | ``break`` | ``continue`` | ``else``
   | ``false`` | ``if`` | ``int`` | ``print``
   | ``return`` | ``string`` | ``true`` | ``void``
   | ``while`` |  |  |
@@ -63,12 +63,11 @@ All other symbols are terminals.
   | //[Arg]// | -> | **eps**
   |  |  **|**  | //Arg//
   |  |  **|**  | //Arg// ``,`` //[Arg]//
-  | //Block// | -> | ``{`` //[Stmt]// ``}``
+  | //Block// | -> | ``{`` //[Decl]// //[Stmt]// ``}``
   | //[Stmt]// | -> | **eps**
   |  |  **|**  | //Stmt// //[Stmt]//
   | //Stmt// | -> | ``;``
   |  |  **|**  | //Block//
-  |  |  **|**  | //Decl//
   |  |  **|**  | //Ident// ``=`` //Expr// ``;``
   |  |  **|**  | ``return`` //Expr// ``;``
   |  |  **|**  | ``return`` ``;``
@@ -81,7 +80,7 @@ All other symbols are terminals.
   |  |  **|**  | ``print`` ``(`` //Expr// ``)``
   | //Type// | -> | ``int``
   |  |  **|**  | ``string``
-  |  |  **|**  | ``boolean``
+  |  |  **|**  | ``bool``
   |  |  **|**  | ``void``
   | //Expr6// | -> | //Ident//
   |  |  **|**  | //Integer//

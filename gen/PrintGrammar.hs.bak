@@ -166,7 +166,7 @@ instance Print [AbsGrammar.Arg' a] where
 
 instance Print (AbsGrammar.Block' a) where
   prt i = \case
-    AbsGrammar.Blk _ stmts -> prPrec i 0 (concatD [doc (showString "{"), prt 0 stmts, doc (showString "}")])
+    AbsGrammar.Blk _ decls stmts -> prPrec i 0 (concatD [doc (showString "{"), prt 0 decls, prt 0 stmts, doc (showString "}")])
 
 instance Print [AbsGrammar.Stmt' a] where
   prt _ [] = concatD []
@@ -176,7 +176,6 @@ instance Print (AbsGrammar.Stmt' a) where
   prt i = \case
     AbsGrammar.Empty _ -> prPrec i 0 (concatD [doc (showString ";")])
     AbsGrammar.BStmt _ block -> prPrec i 0 (concatD [prt 0 block])
-    AbsGrammar.DStmt _ decl -> prPrec i 0 (concatD [prt 0 decl])
     AbsGrammar.Ass _ id_ expr -> prPrec i 0 (concatD [prt 0 id_, doc (showString "="), prt 0 expr, doc (showString ";")])
     AbsGrammar.Ret _ expr -> prPrec i 0 (concatD [doc (showString "return"), prt 0 expr, doc (showString ";")])
     AbsGrammar.VRet _ -> prPrec i 0 (concatD [doc (showString "return"), doc (showString ";")])
@@ -192,7 +191,7 @@ instance Print (AbsGrammar.Type' a) where
   prt i = \case
     AbsGrammar.Int _ -> prPrec i 0 (concatD [doc (showString "int")])
     AbsGrammar.Str _ -> prPrec i 0 (concatD [doc (showString "string")])
-    AbsGrammar.Bool _ -> prPrec i 0 (concatD [doc (showString "boolean")])
+    AbsGrammar.Bool _ -> prPrec i 0 (concatD [doc (showString "bool")])
     AbsGrammar.Void _ -> prPrec i 0 (concatD [doc (showString "void")])
 
 instance Print (AbsGrammar.Expr' a) where
