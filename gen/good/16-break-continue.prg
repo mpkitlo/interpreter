@@ -6,8 +6,8 @@ int main() {
 
     while (true) {
         x = x + 1;
-        if (x == 10) break;
-        if (y == 5) continue;
+        if (x == 10){break;}
+        if (y == 5){continue;}
         y = y + 1;
     }
 

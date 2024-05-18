@@ -22,12 +22,12 @@ run code =
   case pProgram $ myLexer code of
     (Bad err) -> hPutStrLn stderr err
     (Ok prog) -> do
-      -- typeCheck prog
       tcResult <- runExceptT $ typeCheck prog
       case tcResult of
-        Left err2 -> hPrint stderr (show err2)
-        Right _ -> print tcResult
-
+        (Bad err2) -> hPrint stderr (show err2)
+        (Ok _) -> do
+          print "ok"
+          
         -- case tcResult of
         --   Left r  -> print r
         --   Right r -> print r

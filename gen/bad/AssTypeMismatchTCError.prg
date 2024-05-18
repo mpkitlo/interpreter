@@ -1,7 +1,6 @@
-int x;
-
 int main() {
-    bool b = True;
     bool b;
+    b = 1;
+
     return 0;
 }

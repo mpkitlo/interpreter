@@ -1,4 +1,4 @@
-int i = 5;
+int i;
 
 void set_i_to(int x) {
     i = x;

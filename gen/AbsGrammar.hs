@@ -44,9 +44,9 @@ data Stmt' a
     | Ass a Ident (Expr' a)
     | Ret a (Expr' a)
     | VRet a
-    | Cond a (Expr' a) (Stmt' a)
-    | CondElse a (Expr' a) (Stmt' a) (Stmt' a)
-    | While a (Expr' a) (Stmt' a)
+    | Cond a (Expr' a) (Block' a)
+    | CondElse a (Expr' a) (Block' a) (Block' a)
+    | While a (Expr' a) (Block' a)
     | Break a
     | Continue a
     | SExp a (Expr' a)
