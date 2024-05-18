@@ -26,7 +26,7 @@ run code =
       tcResult <- runExceptT $ typeCheck prog
       case tcResult of
         Left err2 -> hPrint stderr (show err2)
-        Right _ -> print "ok"
+        Right _ -> print tcResult
 
         -- case tcResult of
         --   Left r  -> print r

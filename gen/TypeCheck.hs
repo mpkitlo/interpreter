@@ -7,6 +7,8 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Except
 
 import qualified Data.Map as Map
+import Text.XHtml (isNoHtml)
+import Data.Maybe (isNothing, isJust)
 
 getT :: Type -> TypeT
 getT (Bool _) = BoolT
@@ -15,10 +17,18 @@ getT (Str _)  = StringT
 getT (Void _) = VoidT
 
 data TypeT = BoolT | IntT | StringT | VoidT deriving Eq
+instance Show TypeT where
+    show BoolT = "bool"
+    show IntT = "int"
+    show StringT = "string"
+    show VoidT = "void"
+
+
 type ArgsT = [TypeT]
 type RetT = TypeT
 type VarT = TypeT
 type FunT = (ArgsT, RetT)
+
 
 type FunId = Ident
 type VarId = Ident
@@ -42,7 +52,7 @@ data TCError
     | OrError
     | NotInLoop
     | PrintError
-    | IfReturnVague 
+    | IfReturnVague (Maybe VarT)
 
 instance Show TCError where
     show VarDeclErr = "VarDeclErr"
@@ -61,7 +71,7 @@ instance Show TCError where
     show OrError = "OrError"
     show NotInLoop = "NotInLoop"
     show PrintError = "PrintError"
-    show IfReturnVague = "IfReturnVague"
+    show (IfReturnVague t) = "IfReturnVague" ++ show t
 
 data Env = Env {
     blockNum :: Int,
@@ -90,69 +100,69 @@ handleStmt (Ass _ vId expr) = do
         then return Nothing
         else throwError OperationError
 handleStmt (Ret _ expr) = do
-    t <- handleExpresion expr 
+    t <- handleExpresion expr
     if t == VoidT
         then throwError ReturnError
         else return (Just t)
+    return (Just t)
 handleStmt (VRet _) = return (Just VoidT)
-handleStmt (Cond _ expr block) = do
+handleStmt (Cond _ expr stmt) = do
     t <- handleExpresion expr
     if t == BoolT
-        then handleBlock block
+        then handleStmt stmt
         else throwError IfCondError
-handleStmt (CondElse _ expr block block') = do
+handleStmt (CondElse _ expr stmt stmt') = do
     t <- handleExpresion expr
     if t == BoolT
         then do
-            t' <- handleBlock block
-            t'' <- handleBlock block'
+            t' <- handleStmt stmt
+            t'' <- handleStmt stmt'
             case (t', t'') of
-                (Nothing, _) -> return t''
                 (_, Nothing) -> return t'
+                (Nothing, _) -> return t''
                 (_, _) -> 
                     if t' == t''
                         then return t'
-                        else throwError IfReturnVague
+                        else throwError $ IfReturnVague t'
         else throwError IfCondError
-handleStmt (While _ expr block) = do 
+handleStmt (While _ expr stmt) = do
     t <- handleExpresion expr
     if t == BoolT
-        then handleBlock block
+        then handleStmt stmt
         else throwError WhileCondError
-    
 handleStmt (Break _) = do
-    env <- ask 
-    if inLoop env 
+    env <- ask
+    if inLoop env
         then return Nothing
         else throwError NotInLoop
 handleStmt (Continue _) = do
-    env <- ask 
-    if inLoop env 
+    env <- ask
+    if inLoop env
         then return Nothing
         else throwError NotInLoop
-handleStmt (SExp _ expr) = handleExpresion expr >> return Nothing 
-handleStmt (Print _ expr) = do 
+handleStmt (SExp _ expr) = handleExpresion expr >> return Nothing
+handleStmt (Print _ expr) = do
     t <- handleExpresion expr
     if t == VoidT
         then throwError PrintError
-        else return Nothing 
+        else return Nothing
 
 getVar :: VarId -> TC VarT
 getVar vId = do
-    env <- ask 
-    case Map.lookup vId (varEnv env) of 
+    env <- ask
+    case Map.lookup vId (varEnv env) of
         Nothing -> throwError VarNotDeclared
         Just (vT, block) -> return vT
 
 getFun :: FunId -> TC FunT
 getFun fId = do
-    env <- ask 
-    case Map.lookup fId (funEnv env) of 
+    env <- ask
+    case Map.lookup fId (funEnv env) of
         Nothing -> throwError VarNotDeclared
         Just (fT, block) -> return fT
-    
+
 getAppFun :: FunId -> [Expr] -> TC VarT
-getAppFun fId args = do 
+getAppFun fId args = do
     (args', ret) <- getFun fId
     args'' <- mapM handleExpresion args
     if args' == args''
@@ -160,8 +170,8 @@ getAppFun fId args = do
         else throwError WrongFunArgs
 
 getArgType :: Arg -> Type
-getArgType (ValArg _ t id) = t 
-getArgType (RefArg _ t id) = t 
+getArgType (ValArg _ t id) = t
+getArgType (RefArg _ t id) = t
 
 
 handleExpresion :: Expr -> TC VarT
@@ -205,13 +215,13 @@ handleExpresion (ERel _ expr1 _ expr2) = do
 handleExpresion (EAnd _ expr1 expr2) = do
     t' <- handleExpresion expr1
     t'' <- handleExpresion expr2
-    case (t', t'') of 
+    case (t', t'') of
         (BoolT, BoolT) -> return BoolT
         (_, _) -> throwError AndError
 handleExpresion (EOr _ expr1 expr2)= do
     t' <- handleExpresion expr1
     t'' <- handleExpresion expr2
-    case (t', t'') of 
+    case (t', t'') of
         (BoolT, BoolT) -> return BoolT
         (_, _) -> throwError OrError
 
@@ -219,7 +229,13 @@ handleBlock :: Block -> TC (Maybe RetT)
 handleBlock (Blk _ decls stmts) = do
     env <- handleDecls decls
     statementRet <- local (const env) (mapM handleStmt stmts)
-    return Nothing
+    let filteredRet = filter isJust statementRet
+    if null filteredRet
+        then return Nothing
+        else if and $ map (== head filteredRet) (tail filteredRet)
+            then return $ head filteredRet
+            else throwError ReturnError
+
 
 handleDecl :: Decl -> TC Env
 handleDecl (VarDecl _ vT vId) = do

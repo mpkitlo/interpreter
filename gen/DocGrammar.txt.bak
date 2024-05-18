@@ -57,7 +57,7 @@ All other symbols are terminals.
   |  |  **|**  | //Decl// //[Decl]//
   | //Decl// | -> | //Type// //Ident// ``;``
   |  |  **|**  | //Type// //Ident// ``=`` //Expr// ``;``
-  |  |  **|**  | //Type// //Ident// ``(`` //[Arg]// ``)`` //Block//
+  |  |  **|**  | //Type// //Ident// ``(`` //[Arg]// ``)`` //Stmt//
   | //Arg// | -> | //Type// //Ident//
   |  |  **|**  | //Type// ``&`` //Ident//
   | //[Arg]// | -> | **eps**
@@ -67,12 +67,13 @@ All other symbols are terminals.
   | //[Stmt]// | -> | **eps**
   |  |  **|**  | //Stmt// //[Stmt]//
   | //Stmt// | -> | ``;``
+  |  |  **|**  | //Block//
   |  |  **|**  | //Ident// ``=`` //Expr// ``;``
   |  |  **|**  | ``return`` //Expr// ``;``
   |  |  **|**  | ``return`` ``;``
   |  |  **|**  | ``if`` ``(`` //Expr// ``)`` //Stmt//
   |  |  **|**  | ``if`` ``(`` //Expr// ``)`` //Stmt// ``else`` //Stmt//
-  |  |  **|**  | ``while`` ``(`` //Expr// ``)`` //Block//
+  |  |  **|**  | ``while`` ``(`` //Expr// ``)`` //Stmt//
   |  |  **|**  | ``break``
   |  |  **|**  | ``continue``
   |  |  **|**  | //Expr// ``;``

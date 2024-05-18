@@ -27,7 +27,7 @@ transDecl :: Show a => AbsGrammar.Decl' a -> Result
 transDecl x = case x of
   AbsGrammar.VarDecl _ type_ ident -> failure x
   AbsGrammar.VarDeclAss _ type_ ident expr -> failure x
-  AbsGrammar.FnDecl _ type_ ident args block -> failure x
+  AbsGrammar.FnDecl _ type_ ident args stmt -> failure x
 
 transArg :: Show a => AbsGrammar.Arg' a -> Result
 transArg x = case x of
@@ -41,12 +41,13 @@ transBlock x = case x of
 transStmt :: Show a => AbsGrammar.Stmt' a -> Result
 transStmt x = case x of
   AbsGrammar.Empty _ -> failure x
+  AbsGrammar.BStmt _ block -> failure x
   AbsGrammar.Ass _ ident expr -> failure x
   AbsGrammar.Ret _ expr -> failure x
   AbsGrammar.VRet _ -> failure x
   AbsGrammar.Cond _ expr stmt -> failure x
   AbsGrammar.CondElse _ expr stmt1 stmt2 -> failure x
-  AbsGrammar.While _ expr block -> failure x
+  AbsGrammar.While _ expr stmt -> failure x
   AbsGrammar.Break _ -> failure x
   AbsGrammar.Continue _ -> failure x
   AbsGrammar.SExp _ expr -> failure x
