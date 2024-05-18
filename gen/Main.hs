@@ -7,7 +7,7 @@ import System.Exit
 import System.IO
 
 import TypeCheck
--- import Interpreter
+import Interpreter
 -- import Types
 
 import AbsGrammar
@@ -24,13 +24,13 @@ run code =
     (Ok prog) -> do
       tcResult <- runExceptT $ typeCheck prog
       case tcResult of
-        (Bad err2) -> hPrint stderr (show err2)
-        (Ok _) -> do
-          print "ok"
-          
-        -- case tcResult of
-        --   Left r  -> print r
-        --   Right r -> print r
+        Left err' -> hPrint stderr (show err')
+        Right _  -> do
+          progResult <- runExceptT $ interpret prog
+          case progResult of 
+              Left err'' -> hPutStrLn stderr ""
+              Right r -> return ()
+      return ()
 
 main :: IO ()
 main = do
