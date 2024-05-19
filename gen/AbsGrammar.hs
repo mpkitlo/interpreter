@@ -46,7 +46,7 @@ data Stmt' a
     | VRet a
     | Cond a (Expr' a) (Block' a)
     | CondElse a (Expr' a) (Block' a) (Block' a)
-    | While a (Expr' a) (Block' a)
+    | While a (Expr' a) (Stmt' a)
     | Break a
     | Continue a
     | SExp a (Expr' a)

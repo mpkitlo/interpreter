@@ -8,7 +8,6 @@ import System.IO
 
 import TypeCheck
 import Interpreter
--- import Types
 
 import AbsGrammar
 import ErrM
@@ -20,17 +19,16 @@ runFile fName = readFile fName >>= run
 run :: String -> IO ()
 run code =
   case pProgram $ myLexer code of
-    (Bad err) -> hPutStrLn stderr err
-    (Ok prog) -> do
+    Bad err -> hPutStrLn stderr err
+    Ok prog -> do
       tcResult <- runExceptT $ typeCheck prog
       case tcResult of
-        Left err' -> hPrint stderr (show err')
-        Right _  -> do
+        Bad err' -> hPrint stderr (show err')
+        Ok _  -> do
           progResult <- runExceptT $ interpret prog
           case progResult of 
-              Left err'' -> hPutStrLn stderr ""
-              Right r -> return ()
-      return ()
+              Bad err'' -> hPutStrLn stderr err''
+              Ok _ -> return ()
 
 main :: IO ()
 main = do

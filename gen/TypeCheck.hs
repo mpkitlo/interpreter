@@ -8,7 +8,6 @@ import Control.Monad.Trans.Except
 
 import qualified Data.Map as Map
 import Data.Maybe
-import Language.Haskell.TH (Exp)
 
 getT :: Type -> TypeT
 getT (Bool _) = BoolT
@@ -111,12 +110,12 @@ handleStmt (CondElse _ expr blk blk') = do
                         then return t'
                         else throwError VagueBlockRetErr
         else throwError $ NotBoolCondErr "if"
-handleStmt (While _ expr blk) = do
+handleStmt (While _ expr stmt) = do
     t <- handleExpresion expr
     if t == BoolT
         then do 
             Env num iL vE fE  <- ask 
-            local (const (Env num True vE fE )) (handleBlock blk)
+            local (const (Env num True vE fE )) (handleStmt stmt)
         else throwError $ NotBoolCondErr "while"
 handleStmt (Break _) = do
     env <- ask

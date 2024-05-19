@@ -181,7 +181,7 @@ instance Print (AbsGrammar.Stmt' a) where
     AbsGrammar.VRet _ -> prPrec i 0 (concatD [doc (showString "return"), doc (showString ";")])
     AbsGrammar.Cond _ expr block -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block])
     AbsGrammar.CondElse _ expr block1 block2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block1, doc (showString "else"), prt 0 block2])
-    AbsGrammar.While _ expr block -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 block])
+    AbsGrammar.While _ expr stmt -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt])
     AbsGrammar.Break _ -> prPrec i 0 (concatD [doc (showString "break")])
     AbsGrammar.Continue _ -> prPrec i 0 (concatD [doc (showString "continue")])
     AbsGrammar.SExp _ expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])
