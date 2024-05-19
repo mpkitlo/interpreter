@@ -19,16 +19,16 @@ runFile fName = readFile fName >>= run
 run :: String -> IO ()
 run code =
   case pProgram $ myLexer code of
-    Bad err -> hPutStrLn stderr err
-    Ok prog -> do
+    Left err -> hPutStrLn stderr err
+    Right prog -> do
       tcResult <- runExceptT $ typeCheck prog
       case tcResult of
-        Bad err' -> hPrint stderr (show err')
-        Ok _  -> do
+        Left err' -> hPrint stderr (show err')
+        Right _  -> do
           progResult <- runExceptT $ interpret prog
           case progResult of 
-              Bad err'' -> hPutStrLn stderr err''
-              Ok _ -> return ()
+              Left err'' -> hPutStrLn stderr err''
+              Right _ -> return ()
 
 main :: IO ()
 main = do
