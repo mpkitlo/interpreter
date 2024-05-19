@@ -1,12 +1,12 @@
 
-build_dir = build
+dir = build
 exe = interpreter
 
 $(exe):
-	mkdir -p $(build_dir)
-	ghc -Wall -Wno-unused-imports --make -outputdir $(build_dir) -o $@ -isrc/ -isrc/generated Main.hs
+	mkdir -p $(dir)
+	ghc -outputdir $(dir) -o $@ Main.hs
 
 clean:
-	rm -rf $(build_dir) $(exe)
+	rm -rf $(dir) $(exe)
 
 .PHONY: clean

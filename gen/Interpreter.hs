@@ -1,10 +1,7 @@
 module Interpreter where
-
 import Control.Monad.Except
-
 import AbsGrammar
 import ErrM
-
 import qualified Data.Map as Map
 import Data.Maybe
 import Control.Monad.Reader
@@ -53,11 +50,13 @@ storeVar :: Type -> Store -> (Loc, Store)
 storeVar (Int _) (Store s l) = (l, Store (Map.insert l (IntV 0) s) (l+1))
 storeVar (Str _) (Store s l) = (l, Store (Map.insert l (StringV "") s) (l+1))
 storeVar (Bool _) (Store s l) = (l, Store (Map.insert l (BoolV False) s) (l+1))
+storeVar (Void _) (Store _ _) = error "trying to make void variable"
 
 storeVarSet :: Type -> Value -> Store -> (Loc, Store)
 storeVarSet (Int _) (IntV v) (Store s l) = (l, Store (Map.insert l (IntV v) s) (l+1))
 storeVarSet (Str _) (StringV v) (Store s l) = (l, Store (Map.insert l (StringV v) s) (l+1))
 storeVarSet (Bool _) (BoolV v) (Store s l) = (l, Store (Map.insert l (BoolV v) s) (l+1))
+storeVarSet _ _ _ = error "storage error"
 
 insertLocVal :: Loc -> Value -> Store -> Store
 insertLocVal l v (Store s freeL) = Store (Map.insert l v s) freeL
@@ -79,26 +78,29 @@ getFArgFromExpr :: (Expr, FunArgPassType) -> IP FunArg
 getFArgFromExpr (EVar _ vId, RefPass) = do
     env <- ask
     return $ Ref $ fromJust $ Map.lookup vId (varEnv env)
+getFArgFromExpr (_, RefPass) = error "Trying to pass value by reference"
 getFArgFromExpr (e, ValPass) = do
     eV <- handleExpr e
     return $ Val eV
 
-
 handleArg :: Arg -> FunArg -> IP Env
-handleArg (RefArg _ vT vId) (Ref l) = do
-    asks (insertVar vId l)
+handleArg (RefArg _ _ vId) (Ref l) = do asks (insertVar vId l)
 handleArg (ValArg _ vT vId) (Val v) = do
     env <- ask
     st <- get
     let (l, newStore) = storeVar vT st
     put $ insertLocVal l v newStore
     return $ insertVar vId l env
+handleArg (ValArg {}) (Ref _) = error "Function error"
+handleArg (RefArg {}) (Val _) = error "Function error"
 
 handleArgs :: [Arg] -> [FunArg] -> IP Env
 handleArgs [] [] = ask
 handleArgs (a : as) (f : fs) = do
     env <- handleArg a f
     local (const env) (handleArgs as fs)
+handleArgs (_ : _) [] = error "Function error"
+handleArgs [] (_ : _) = error "Function error"
 
 handleDecl :: Decl -> IP Env
 handleDecl (VarDecl _ vT vId) = do
@@ -127,7 +129,7 @@ handleDecl (FnDecl _ fT fId args blk) = do
 handleExpr:: Expr -> IP Value
 handleExpr (EVar _ vId) = do
     env <- ask
-    (Store s l) <- get
+    (Store s _) <- get
     return $ fromJust $ Map.lookup (fromJust (Map.lookup vId (varEnv env))) s
 handleExpr (ELitInt _ v) = return $ IntV v
 handleExpr (ELitTrue _) = return $ BoolV True
@@ -251,5 +253,5 @@ evalProgram decls = do
 
 interpret :: Program -> ExceptT String IO Value
 interpret (Prog _ ds) = do
-    (ret, s) <- runStateT (runReaderT (evalProgram ds) (Env Map.empty Map.empty)) (Store Map.empty 0)
+    (ret, _) <- runStateT (runReaderT (evalProgram ds) (Env Map.empty Map.empty)) (Store Map.empty 0)
     return ret
