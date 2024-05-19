@@ -1,4 +1,13 @@
-int main(){
+int x = 5;
 
-	print("xd")
-	return 0;
+void f(int x){
+    x = x + 2;
+    print(x);
+}
+
+int main(){
+    f(x);
+    print(x);
+
+    return 0;
+}

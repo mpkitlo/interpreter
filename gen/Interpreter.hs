@@ -59,6 +59,11 @@ storeVar (Int _) (Store s l) = (l, Store (Map.insert l (IntV 0) s) (l+1))
 storeVar (Str _) (Store s l) = (l, Store (Map.insert l (StringV "") s) (l+1))
 storeVar (Bool _) (Store s l) = (l, Store (Map.insert l (BoolV False) s) (l+1))
 
+storeVarV :: Type -> Value -> Store -> (Loc, Store)
+storeVarV (Int _) (IntV v) (Store s l) = (l, Store (Map.insert l (IntV v) s) (l+1))
+storeVarV (Str _) (StringV v) (Store s l) = (l, Store (Map.insert l (StringV v) s) (l+1))
+storeVarV (Bool _) (BoolV v) (Store s l) = (l, Store (Map.insert l (BoolV v) s) (l+1))
+
 insertLocVal :: Loc -> Value -> Store -> Store
 insertLocVal l v (Store s freeL) = Store (Map.insert l v s) freeL
 
@@ -109,17 +114,18 @@ handleDecl (VarDecl _ vT vId) = do
     put newStore
     return $ insertVar vId l env
 handleDecl (VarDeclAss _ vT vId expr) = do
+    e <- handleExpr expr
     env <- ask 
     st <- get
-    let (l, newStore) = storeVar vT st
+    let (l, newStore) = storeVarV vT e st
     put newStore
     return $ insertVar vId l env
-handleDecl (FnDecl _ fT fId args block) = do
+handleDecl (FnDecl _ fT fId args blk) = do
     env <- ask
     let fun argsL = do
         let fEnv = insertFun fId (Fn (map getFArgsPassTypeFromArg args) fun) env
         envFunArgs <- local (const fEnv) $ handleArgs args argsL
-        retV <- local (const envFunArgs) $ evalBlockV block
+        retV <- local (const envFunArgs) $ evalBlockV blk
         case (fromMaybe VoidV retV, fT) of
             (ret, _) -> return ret
     return $ insertFun fId (Fn (map getFArgsPassTypeFromArg args) fun) env
@@ -140,23 +146,87 @@ handleExpr (Neg _ expr) = do
 handleExpr (Not _ expr) = do 
     (BoolV b) <- handleExpr expr
     return $ BoolV (not b)
-handleExpr (EMul _ expr1 op expr2) = return $ IntV 0
-handleExpr (EAdd _ e1 op e2) = return $ IntV 0
-handleExpr (ERel _ e1 op e2) = return $ IntV 0
-handleExpr (EAnd _ e1 e2) = return $ IntV 0
-handleExpr (EOr _ e1 e2) = return $ IntV 0
+handleExpr (EMul _ expr1 op expr2) = do
+    (IntV v) <- handleExpr expr1
+    (IntV v') <- handleExpr expr2
+    case op of 
+        (Times _)-> return $ IntV (v * v')
+        (Mod _) -> if v' == 0
+                then throwError DivideByZeroEx
+                else return $ IntV (v `mod` v')
+        (Div _) -> if v' == 0
+                then throwError DivideByZeroEx
+                else return $ IntV (v `div` v')
+handleExpr (EAdd _ expr1 op expr2) = do
+    (IntV v) <- handleExpr expr1
+    (IntV v') <- handleExpr expr2
+    case op of 
+        (Plus _)-> return $ IntV (v + v')
+        (Minus _) -> return $ IntV (v - v')
+handleExpr (ERel _ expr1 op expr2) = do
+    (IntV v) <- handleExpr expr1
+    (IntV v') <- handleExpr expr2
+    case op of
+        (LTH _) -> return $ BoolV (v < v')
+        (LE _)-> return $ BoolV (v <= v')
+        (GTH _)-> return $ BoolV (v > v')
+        (GE _)-> return $ BoolV (v >= v')
+        (EQU _) -> return $ BoolV (v == v')
+        (NE _) -> return $ BoolV (v /= v')
+handleExpr (EAnd _ expr1 expr2) = do
+    (BoolV b) <- handleExpr expr1
+    (BoolV b') <- handleExpr expr2
+    return $ BoolV (b && b')
+handleExpr (EOr _ expr1 expr2) = do
+    (BoolV b) <- handleExpr expr1
+    (BoolV b') <- handleExpr expr2
+    return $ BoolV (b || b')
 
 handleStmt :: Stmt -> IP (Maybe Value)
 handleStmt (Empty _) = return Nothing
-handleStmt (BStmt _  b) = return Nothing
-handleStmt (Ass _ vId e) = return Nothing
-handleStmt (Ret _ e) = return Nothing
-handleStmt (VRet _) = return Nothing
-handleStmt (Cond _ e s) = return Nothing
-handleStmt (CondElse _ e s1 s2) = return Nothing
-handleStmt (While _ e s) = return Nothing
-handleStmt (SExp _ e) = return Nothing
+handleStmt (BStmt _  b) = do
+    env <- ask 
+    local (const env)(handleBlock b)
+handleStmt (Ass _ vId expr) = do
+    eV <- handleExpr expr
+    env <- ask 
+    st <- get
+    let Just l = Map.lookup vId (varEnv env)
+    put $ Store (Map.insert l eV (store st)) (freeLoc st)
+    return Nothing 
+handleStmt (Ret _ expr) = do 
+    rV <- handleExpr expr 
+    return $ Just rV
+handleStmt (VRet _) = return $ Just VoidV
+handleStmt (Cond _ expr blk) = do 
+    (BoolV b) <- handleExpr expr
+    if b 
+        then handleBlock blk
+        else return Nothing
+handleStmt (CondElse _ expr blk1 blk2) = do 
+    (BoolV b) <- handleExpr expr
+    if b 
+        then handleBlock blk1
+        else handleBlock blk2
+handleStmt s@(While _ expr (Blk _ decls (x : xs))) = do 
+    (BoolV b) <- handleExpr expr
+    if b 
+        then do
+            res <- handleStmt x
+            case res of
+                Just BreakV -> return Nothing
+                Just v -> return $ Just v
+                _ -> handleStmts xs
+        else return Nothing
+handleStmt (Break _) = return $ Just BreakV
+handleStmt (Continue _) = return $ Just ContinueV
+handleStmt (SExp _ expr) = handleExpr expr >> return Nothing
 handleStmt (Print _ e) = performPrint e >> return Nothing
+
+handleBlock :: Block -> IP (Maybe Value)
+handleBlock (Blk _ decls stmts) = do
+    env <- handleDecls decls
+    local (const env) (handleStmts stmts)
 
 performPrint :: Expr -> IP ()
 performPrint e = do 
